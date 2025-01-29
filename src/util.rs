@@ -1,18 +1,39 @@
-use chrono::{NaiveDate, TimeZone, Utc};
-use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
+use chrono::{
+    NaiveDate,
+    TimeZone,
+    Utc,
+};
+use rand::{
+    distributions::Alphanumeric,
+    thread_rng,
+    Rng,
+};
 use serde::Serialize;
 
 use serde_json::Value;
-use std::collections::BTreeMap;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    collections::BTreeMap,
+    time::{
+        SystemTime,
+        UNIX_EPOCH,
+    },
+};
+use url::form_urlencoded;
 
 pub fn build_request<T: ToString>(parameters: &BTreeMap<String, T>) -> String {
-    let mut request = String::with_capacity(parameters.iter().map(|(k, v)| k.len() + v.to_string().len() + 1).sum());
+    let mut request = String::with_capacity(
+        parameters
+            .iter()
+            .map(|(k, v)| k.len() + v.to_string().len() + 1)
+            .sum(),
+    );
     for (key, value) in parameters {
-        request.push_str(key);
+        let key = form_urlencoded::byte_serialize(key.as_bytes()).collect::<String>();
+        request.push_str(key.as_str());
         request.push('=');
-        request.push_str(&value.to_string());
+        let value = form_urlencoded::byte_serialize(value.to_string().as_bytes())
+            .collect::<String>();
+        request.push_str(&value);
         request.push('&');
     }
     request.truncate(request.len() - 1);

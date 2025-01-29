@@ -1,23 +1,47 @@
-
-
 use tokio::net::TcpStream;
 
-use crate::api::{WebsocketAPI, API};
-use crate::errors::{BybitContentError, BybitError};
-use crate::util::{generate_random_uid, get_timestamp};
+use crate::{
+    api::{
+        WebsocketAPI,
+        API,
+    },
+    errors::{
+        BybitContentError,
+        BybitError,
+    },
+    util::{
+        generate_random_uid,
+        get_timestamp,
+    },
+};
 use hex::encode as hex_encode;
-use hmac::{Hmac, Mac};
+use hmac::{
+    Hmac,
+    Mac,
+};
 use reqwest::{
-    header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE, USER_AGENT},
-    Client as ReqwestClient, Response as ReqwestResponse, StatusCode,
+    header::{
+        HeaderMap,
+        HeaderName,
+        HeaderValue,
+        CONTENT_TYPE,
+        USER_AGENT,
+    },
+    Client as ReqwestClient,
+    Response as ReqwestResponse,
+    StatusCode,
 };
 
 use futures::sink::SinkExt;
 use serde::de::DeserializeOwned;
 use serde_json::json;
 use sha2::Sha256;
-use tokio_tungstenite::WebSocketStream;
-use tokio_tungstenite::{connect_async, tungstenite::Message as WsMessage, MaybeTlsStream};
+use tokio_tungstenite::{
+    connect_async,
+    tungstenite::Message as WsMessage,
+    MaybeTlsStream,
+    WebSocketStream,
+};
 use url::Url as WsUrl;
 
 /// The main client struct that wraps the reqwest client.
@@ -47,7 +71,11 @@ impl Client {
     /// # Returns
     ///
     /// A new instance of `Client`.
-    pub fn new(api_key: Option<String>, secret_key: Option<String>, host: String) -> Self {
+    pub fn new(
+        api_key: Option<String>,
+        secret_key: Option<String>,
+        host: String,
+    ) -> Self {
         // Create a new instance of the reqwest client.
         let inner_client = ReqwestClient::builder()
             .build()
@@ -131,7 +159,8 @@ impl Client {
         // Sign the request, passing the query string for signature
         // The request is signed with the API secret key and requires
         // the `recv_window` for the request to be within the specified timeframe.
-        let headers = self.build_signed_headers(false, true, recv_window, Some(query_string))?;
+        let headers =
+            self.build_signed_headers(false, true, recv_window, Some(query_string))?;
 
         // Make the signed HTTP GET request
         let client = &self.inner_client;
@@ -275,7 +304,8 @@ impl Client {
         );
         // Insert the Content-Type header if required
         if content_type {
-            custom_headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+            custom_headers
+                .insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         }
         // Return the signed headers
         Ok(custom_headers).map_err(|e| BybitError::ReqError(e))
@@ -300,7 +330,12 @@ impl Client {
     /// If a request body is provided, it appends it to the sign message.
     /// The function then uses the HMAC-SHA256 algorithm to sign the message.
     /// The result is hex-encoded and returned as a string.
-    fn sign_message(&self, timestamp: &str, recv_window: &str, request: Option<String>) -> String {
+    fn sign_message(
+        &self,
+        timestamp: &str,
+        recv_window: &str,
+        request: Option<String>,
+    ) -> String {
         // Create a new HMAC SHA256 instance with the secret key
         let mut mac = Hmac::<Sha256>::new_from_slice(self.secret_key.as_bytes()).unwrap();
 
@@ -380,17 +415,26 @@ impl Client {
         &self,
         response: ReqwestResponse,
     ) -> Result<T, BybitError> {
+        let status = response.status();
         // Match the status code of the response
-        match response.status() {
+        match status {
             // If the status code is OK, deserialize the response body into T and return it
             StatusCode::OK => {
-                let response = response.json::<T>().await?;
+                let body = response.text().await?;
+                let response: T =
+                    serde_json::from_slice(body.as_bytes()).map_err(|e| {
+                        BybitError::Base(format!(
+                            "Failed to deserialize response `{}` with body: {body}",
+                            e
+                        ))
+                    })?;
                 Ok(response)
             }
             // If the status code is BAD_REQUEST, deserialize the response body into BybitContentError and
             // wrap it in BybitError and return it
             StatusCode::BAD_REQUEST => {
-                let error: BybitContentError = response.json().await.map_err(BybitError::from)?;
+                let error: BybitContentError =
+                    response.json().await.map_err(BybitError::from)?;
                 Err(BybitError::BybitError(error).into())
             }
             // If the status code is INTERNAL_SERVER_ERROR, return BybitError::InternalServerError

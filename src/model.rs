@@ -1,8 +1,20 @@
 #![allow(unused_imports)]
-use crate::errors::BybitError;
-use serde::{Deserialize, Serialize};
-use serde_json::{from_value, Value};
-use std::{borrow::Cow, collections::BTreeMap};
+use crate::{
+    account::QuotaAccountType,
+    errors::BybitError,
+};
+use serde::{
+    Deserialize,
+    Serialize,
+};
+use serde_json::{
+    from_value,
+    Value,
+};
+use std::{
+    borrow::Cow,
+    collections::BTreeMap,
+};
 use thiserror::Error;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -57,7 +69,7 @@ impl<'a> KlineRequest<'a> {
         limit: Option<u64>,
     ) -> KlineRequest<'a> {
         KlineRequest {
-            category: category,
+            category,
             symbol: Cow::Borrowed(symbol),
             interval: Cow::Borrowed(interval),
             start: start.map(|s| Cow::Borrowed(s)),
@@ -216,9 +228,9 @@ impl<'a> InstrumentRequest<'a> {
         limit: Option<u64>,
     ) -> InstrumentRequest<'a> {
         InstrumentRequest {
-            category: category,
+            category,
             symbol: symbol.map(|s| Cow::Borrowed(s)),
-            status: status,
+            status,
             base_coin: base_coin.map(|s| Cow::Borrowed(s)),
             limit,
         }
@@ -416,7 +428,11 @@ pub struct PriceFilter {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct LotSizeFilter {
-    #[serde(rename = "basePrecision", skip_serializing_if = "Option::is_none", default)]
+    #[serde(
+        rename = "basePrecision",
+        skip_serializing_if = "Option::is_none",
+        default
+    )]
     pub base_precision: Option<String>,
     #[serde(rename = "quotePrecision", skip_serializing_if = "Option::is_none")]
     pub quote_precision: Option<String>,
@@ -453,7 +469,11 @@ impl<'a> OrderbookRequest<'a> {
         OrderbookRequest::new("BTCUSDT", Category::Linear, None)
     }
 
-    pub fn new(symbol: &'a str, category: Category, limit: Option<u64>) -> OrderbookRequest<'a> {
+    pub fn new(
+        symbol: &'a str,
+        category: Category,
+        limit: Option<u64>,
+    ) -> OrderbookRequest<'a> {
         OrderbookRequest {
             symbol: Cow::Borrowed(symbol),
             category,
@@ -2003,7 +2023,10 @@ pub struct BatchPlaceRequest<'a> {
     pub requests: Vec<OrderRequest<'a>>,
 }
 impl<'a> BatchPlaceRequest<'a> {
-    pub fn new(category: Category, requests: Vec<OrderRequest<'a>>) -> BatchPlaceRequest<'a> {
+    pub fn new(
+        category: Category,
+        requests: Vec<OrderRequest<'a>>,
+    ) -> BatchPlaceRequest<'a> {
         BatchPlaceRequest { category, requests }
     }
 }
@@ -2059,7 +2082,10 @@ pub struct BatchAmendRequest<'a> {
 }
 
 impl<'a> BatchAmendRequest<'a> {
-    pub fn new(category: Category, requests: Vec<AmendOrderRequest<'a>>) -> BatchAmendRequest<'a> {
+    pub fn new(
+        category: Category,
+        requests: Vec<AmendOrderRequest<'a>>,
+    ) -> BatchAmendRequest<'a> {
         BatchAmendRequest { category, requests }
     }
 }
@@ -2138,7 +2164,6 @@ pub struct CanceledOrder {
     #[serde(rename = "orderLinkId")]
     pub order_link_id: String,
 }
-
 
 #[derive(Clone)]
 pub enum RequestType<'a> {
@@ -2287,7 +2312,7 @@ pub struct LeverageResponse {
     pub ret_msg: String,
     pub result: Empty, // Assuming result is an empty struct as per provided JSON
     #[serde(rename = "retExtInfo")]
-    pub ret_ext_info: Empty, // Assuming retExtInfo is an empty struct as per provided JSON
+    pub ret_ext_info: Empty, /* Assuming retExtInfo is an empty struct as per provided JSON */
     pub time: u64,
 }
 
@@ -2300,7 +2325,12 @@ pub struct ChangeMarginRequest<'a> {
 }
 
 impl<'a> ChangeMarginRequest<'a> {
-    pub fn new(category: Category, symbol: &'a str, trade_mode: i8, leverage: i8) -> Self {
+    pub fn new(
+        category: Category,
+        symbol: &'a str,
+        trade_mode: i8,
+        leverage: i8,
+    ) -> Self {
         Self {
             category,
             symbol: Cow::Borrowed(symbol),
@@ -2326,7 +2356,7 @@ pub struct ChangeMarginResponse {
     pub ret_msg: String,
     pub result: Empty, // Assuming result is an empty struct as per provided JSON
     #[serde(rename = "retExtInfo")]
-    pub ret_ext_info: Empty, // Assuming retExtInfo is an empty struct as per provided JSON
+    pub ret_ext_info: Empty, /* Assuming retExtInfo is an empty struct as per provided JSON */
     pub time: u64,
 }
 
@@ -2366,7 +2396,7 @@ pub struct MarginModeResponse {
     pub ret_msg: String,
     pub result: Empty, // Assuming result is an empty struct as per provided JSON
     #[serde(rename = "retExtInfo")]
-    pub ret_ext_info: Empty, // Assuming retExtInfo is an empty struct as per provided JSON
+    pub ret_ext_info: Empty, /* Assuming retExtInfo is an empty struct as per provided JSON */
     pub time: u64,
 }
 
@@ -2501,7 +2531,7 @@ pub struct TradingStopResponse {
     pub ret_msg: String,
     pub result: Empty, // Assuming result is an empty struct as per provided JSON
     #[serde(rename = "retExtInfo")]
-    pub ret_ext_info: Empty, // Assuming retExtInfo is an empty struct as per provided JSON
+    pub ret_ext_info: Empty, /* Assuming retExtInfo is an empty struct as per provided JSON */
     pub time: u64,
 }
 
@@ -2541,7 +2571,7 @@ pub struct AddMarginResponse {
     pub ret_msg: String,
     pub result: Empty, // Assuming result is an empty struct as per provided JSON
     #[serde(rename = "retExtInfo")]
-    pub ret_ext_info: Empty, // Assuming retExtInfo is an empty struct as per provided JSON
+    pub ret_ext_info: Empty, /* Assuming retExtInfo is an empty struct as per provided JSON */
     pub time: u64,
 }
 
@@ -2581,7 +2611,7 @@ pub struct AddReduceMarginResponse {
     pub ret_msg: String,
     pub result: AddReduceMarginResult,
     #[serde(rename = "retExtInfo")]
-    pub ret_ext_info: Empty, // Assuming retExtInfo is an empty struct as per provided JSON
+    pub ret_ext_info: Empty, /* Assuming retExtInfo is an empty struct as per provided JSON */
     pub time: u64,
 }
 
@@ -2737,7 +2767,13 @@ impl<'a> MovePositionRequest<'a> {
     }
 }
 impl<'a> PositionItem<'a> {
-    pub fn new(category: Category, symbol: &'a str, price: f64, side: Side, qty: f64) -> Self {
+    pub fn new(
+        category: Category,
+        symbol: &'a str,
+        price: f64,
+        side: Side,
+        qty: f64,
+    ) -> Self {
         Self {
             category,
             symbol: Cow::Borrowed(symbol),
@@ -3120,7 +3156,7 @@ pub struct AccountInfo {
 
 #[derive(Clone, Default)]
 pub struct TransactionLogRequest<'a> {
-    pub account_type: Option<Cow<'a, str>>,
+    pub account_type: Option<QuotaAccountType>,
     pub category: Option<Category>,
     pub currency: Option<Cow<'a, str>>,
     pub base_coin: Option<Cow<'a, str>>,
@@ -3132,7 +3168,7 @@ pub struct TransactionLogRequest<'a> {
 
 impl<'a> TransactionLogRequest<'a> {
     pub fn new(
-        account_type: Option<&'a str>,
+        account_type: Option<QuotaAccountType>,
         category: Option<Category>,
         currency: Option<&'a str>,
         base_coin: Option<&'a str>,
@@ -3142,7 +3178,7 @@ impl<'a> TransactionLogRequest<'a> {
         limit: Option<u32>,
     ) -> Self {
         Self {
-            account_type: account_type.map(|s| Cow::Borrowed(s)),
+            account_type,
             category,
             currency: currency.map(|s| Cow::Borrowed(s)),
             base_coin: base_coin.map(|s| Cow::Borrowed(s)),
@@ -3298,7 +3334,7 @@ pub enum WebsocketEvents {
     OrderEvent(OrderEvent),
     Wallet(WalletEvent),
     TradeStream(TradeStreamEvent),
-    FastExecEvent(FastExecution)
+    FastExecEvent(FastExecution),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -3723,13 +3759,12 @@ pub struct ExecutionData {
 unsafe impl Send for ExecutionData {}
 unsafe impl Sync for ExecutionData {}
 
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FastExecution {
     pub topic: String,
     #[serde(rename = "creationTime")]
     pub creation_time: u64,
-    pub data:  Vec<FastExecData>
+    pub data: Vec<FastExecData>,
 }
 
 unsafe impl Send for FastExecution {}
@@ -3756,8 +3791,7 @@ pub struct FastExecData {
 }
 
 unsafe impl Send for FastExecData {}
-unsafe impl Sync for  FastExecData {}
-
+unsafe impl Sync for FastExecData {}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct OrderData {
@@ -3942,7 +3976,12 @@ unsafe impl Sync for CoinData {}
 mod string_to_u64 {
     use std::default;
 
-    use serde::{self, Deserialize, Deserializer, Serializer};
+    use serde::{
+        self,
+        Deserialize,
+        Deserializer,
+        Serializer,
+    };
 
     // Serialize a u64 as a string.
     pub fn serialize<S>(value: &u64, serializer: S) -> Result<S::Ok, S::Error>
@@ -3964,7 +4003,12 @@ mod string_to_u64 {
 }
 
 mod string_to_float {
-    use serde::{self, Deserialize, Deserializer, Serializer};
+    use serde::{
+        self,
+        Deserialize,
+        Deserializer,
+        Serializer,
+    };
 
     // Serialize a u64 as a string.
     pub fn serialize<S>(value: &f64, serializer: S) -> Result<S::Ok, S::Error>
@@ -3983,4 +4027,87 @@ mod string_to_float {
         let s = String::deserialize(deserializer)?;
         s.parse::<f64>().map_err(serde::de::Error::custom)
     }
+}
+
+#[derive(Clone, Default, Serialize)]
+pub struct QuoteApply<'a> {
+    #[serde(rename = "fromCoin")]
+    pub from_coin: Cow<'a, str>,
+    #[serde(rename = "toCoin")]
+    pub to_coin: Cow<'a, str>,
+    #[serde(rename = "fromCoinType")]
+    pub from_coin_type: Option<Cow<'a, str>>,
+    #[serde(rename = "toCoinType")]
+    pub to_coin_type: Option<Cow<'a, str>>,
+    #[serde(rename = "requestCoin")]
+    pub request_coin: Cow<'a, str>,
+    #[serde(rename = "requestAmount")]
+    pub request_amount: String,
+    #[serde(rename = "accountType")]
+    pub account_type: Cow<'a, str>,
+    // #[serde(rename = "quoteType")]
+    // pub quote_type: u64,
+}
+
+impl<'a> QuoteApply<'a> {
+    pub fn custom(
+        from_coin: &'a str,
+        to_coin: &'a str,
+        request_coin: &'a str,
+        request_amount: String,
+        account_type: &'a str,
+    ) -> Self {
+        const COIN_TYPE: &str = "crypto";
+
+        Self {
+            from_coin: Cow::Borrowed(from_coin),
+            to_coin: Cow::Borrowed(to_coin),
+            from_coin_type: Some(Cow::Borrowed(COIN_TYPE)),
+            to_coin_type: Some(Cow::Borrowed(COIN_TYPE)),
+            request_coin: Cow::Borrowed(request_coin),
+            request_amount,
+            account_type: Cow::Borrowed(account_type),
+            // quote_type: 1,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct QuoteApplyResponse {
+    pub quote_tx_id: String,
+    pub exchange_rate: String,
+    pub from_coin: String,
+    pub from_coin_type: String,
+    pub to_coin: String,
+    pub to_coin_type: String,
+    pub from_amount: String,
+    pub to_amount: String,
+    pub expired_time: String,
+    pub request_id: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ConvertCommonResponse<R> {
+    pub ret_code: u64,
+    pub ret_msg: String,
+    pub result: R,
+    pub time: u64,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct AllCoinsResponse {
+    pub member_id: String,
+    pub balance: Vec<CoinResponse>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct CoinResponse {
+    pub coin: String,
+    pub wallet_balance: String,
+    pub transfer_balance: String,
+    pub bonus: String,
 }

@@ -67,7 +67,7 @@ pub enum BybitError {
     Unauthorized,
 
     /// StatusCode variant that holds the status code.
-    #[error("Status Code")]
+    #[error("Status Code {0}")]
     StatusCode(u16),
 
     /// Base variant that holds a String representing the error.
@@ -94,7 +94,6 @@ impl fmt::Display for BybitContentError {
 impl From<std::string::String> for BybitError {
     // This function takes a String, and returns a BybitError.
     fn from(err: String) -> Self {
-        //
         // Convert the String error to BybitError here
         // For example, you can return a new instance of BybitError with the error message
         BybitError::new(err)

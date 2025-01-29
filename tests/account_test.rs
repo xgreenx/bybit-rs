@@ -1,39 +1,39 @@
-use bybit::api::*;
-use bybit::model::*;
+use bybit::{
+    account::AccountManager,
+    api::*,
+    enable_tracing,
+    model::*,
+    test_utils::{
+        api_key,
+        secret,
+    },
+};
 use tokio;
 
-#[cfg(test)]
-mod tests {
-    use bybit::account::AccountManager;
+enable_tracing!();
 
-    use super::*;
- static API_KEY: &str = ""; //Mockup string
-    static SECRET: &str = ""; // Mockup string
+#[tokio::test]
+async fn test_wallet() {
+    let account: AccountManager = Bybit::new(api_key(), secret());
+    let wallet = account.get_wallet_balance("UNIFIED", Some("ETH")).await;
 
-    #[tokio::test]
-    async fn test_wallet() {
-        let account: AccountManager =
-               Bybit::new(Some(API_KEY.into()), Some(SECRET.into()));
-        let wallet = account.get_wallet_balance("UNIFIED", None).await;
+    tracing::info!("{:?}", wallet);
+}
 
-        println!("{:?}", wallet);
-    }
+#[tokio::test]
+async fn test_fee_rate() {
+    let account: AccountManager = Bybit::new(api_key(), secret());
+    let wallet = account
+        .get_fee_rate(Category::Linear, Some("BTCUSDT".to_string()))
+        .await;
 
-    #[tokio::test]
-    async fn test_fee_rate() {
-        let account: AccountManager =
-           Bybit::new(Some(API_KEY.into()), Some(SECRET.into()));
-        let wallet = account.get_fee_rate(Category::Linear, Some("BTCUSDT".to_string())).await;
+    tracing::info!("{:?}", wallet);
+}
 
-        println!("{:?}", wallet);
-    }
+#[tokio::test]
+async fn test_borrow_history() {
+    let account: AccountManager = Bybit::new(api_key(), secret());
+    let wallet = account.get_fee_rate(Category::Spot, None).await;
 
-    #[tokio::test]
-    async fn test_borrow_history() {
-        let account: AccountManager =
-          Bybit::new(Some(API_KEY.into()), Some(SECRET.into()));
-        let wallet = account.get_fee_rate(Category::Spot, None).await;
-
-        println!("{:?}", wallet);
-    }
+    tracing::info!("{:?}", wallet);
 }

@@ -1,22 +1,53 @@
-use crate::api::WebsocketAPI;
-use crate::client::Client;
-use crate::errors::BybitError;
-use crate::model::{
-    Category, ExecutionData, FastExecData, LiquidationData, OrderBookUpdate, OrderData,
-    PongResponse, PositionData, RequestType, Subscription, Tickers, WalletData, WebsocketEvents,
-    WsKline, WsTrade,
+use crate::{
+    api::WebsocketAPI,
+    client::Client,
+    errors::BybitError,
+    model::{
+        Category,
+        ExecutionData,
+        FastExecData,
+        LiquidationData,
+        OrderBookUpdate,
+        OrderData,
+        PongResponse,
+        PositionData,
+        RequestType,
+        Subscription,
+        Tickers,
+        WalletData,
+        WebsocketEvents,
+        WsKline,
+        WsTrade,
+    },
+    trade::build_ws_orders,
+    util::{
+        build_json_request,
+        generate_random_uid,
+        get_timestamp,
+    },
 };
-use crate::trade::build_ws_orders;
-use crate::util::{build_json_request, generate_random_uid, get_timestamp};
-use futures::{SinkExt, StreamExt};
-use serde_json::{json, Value};
-use std::collections::BTreeMap;
-use std::time::Instant;
-use tokio::net::TcpStream;
-use tokio::sync::mpsc;
-use tokio::time::Duration;
-use tokio_tungstenite::WebSocketStream;
-use tokio_tungstenite::{tungstenite::Message as WsMessage, MaybeTlsStream};
+use futures::{
+    SinkExt,
+    StreamExt,
+};
+use serde_json::{
+    json,
+    Value,
+};
+use std::{
+    collections::BTreeMap,
+    time::Instant,
+};
+use tokio::{
+    net::TcpStream,
+    sync::mpsc,
+    time::Duration,
+};
+use tokio_tungstenite::{
+    tungstenite::Message as WsMessage,
+    MaybeTlsStream,
+    WebSocketStream,
+};
 
 #[derive(Clone)]
 pub struct Stream {
@@ -51,10 +82,10 @@ impl Stream {
                 let response: PongResponse = serde_json::from_str(&data)?;
                 match response {
                     PongResponse::PublicPong(pong) => {
-                        println!("Pong received successfully: {:#?}", pong);
+                        tracing::info!("Pong received successfully: {:#?}", pong);
                     }
                     PongResponse::PrivatePong(pong) => {
-                        println!("Pong received successfully: {:#?}", pong);
+                        tracing::info!("Pong received successfully: {:#?}", pong);
                     }
                 }
             }
@@ -124,7 +155,10 @@ impl Stream {
         build_json_request(&parameters)
     }
 
-    pub fn build_trade_subscription(orders: RequestType, recv_window: Option<u64>) -> String {
+    pub fn build_trade_subscription(
+        orders: RequestType,
+        recv_window: Option<u64>,
+    ) -> String {
         let mut parameters: BTreeMap<String, Value> = BTreeMap::new();
         parameters.insert("reqId".into(), generate_random_uid(16).into());
         let mut header_map: BTreeMap<String, String> = BTreeMap::new();
@@ -184,7 +218,8 @@ impl Stream {
             .into_iter()
             .map(|(num, sym)| format!("orderbook.{}.{}", num, sym.to_uppercase()))
             .collect();
-        let request = Subscription::new("subscribe", arr.iter().map(AsRef::as_ref).collect());
+        let request =
+            Subscription::new("subscribe", arr.iter().map(AsRef::as_ref).collect());
         self.ws_subscribe(request, category, move |event| {
             if let WebsocketEvents::OrderBookEvent(order_book) = event {
                 sender.send(order_book).unwrap();
@@ -218,7 +253,8 @@ impl Stream {
             .iter()
             .map(|&sub| format!("publicTrade.{}", sub.to_uppercase()))
             .collect();
-        let request = Subscription::new("subscribe", arr.iter().map(AsRef::as_ref).collect());
+        let request =
+            Subscription::new("subscribe", arr.iter().map(AsRef::as_ref).collect());
         let handler = move |event| {
             if let WebsocketEvents::TradeEvent(trades) = event {
                 for trade in trades.data {
@@ -257,7 +293,8 @@ impl Stream {
             .into_iter()
             .map(|sub| format!("tickers.{}", sub.to_uppercase()))
             .collect();
-        let request = Subscription::new("subscribe", arr.iter().map(String::as_str).collect());
+        let request =
+            Subscription::new("subscribe", arr.iter().map(String::as_str).collect());
 
         let handler = move |event| {
             if let WebsocketEvents::TickerEvent(tickers) = event {
@@ -265,7 +302,9 @@ impl Stream {
                     Tickers::Linear(linear_ticker) => {
                         sender.send(Tickers::Linear(linear_ticker)).unwrap()
                     }
-                    Tickers::Spot(spot_ticker) => sender.send(Tickers::Spot(spot_ticker)).unwrap(),
+                    Tickers::Spot(spot_ticker) => {
+                        sender.send(Tickers::Spot(spot_ticker)).unwrap()
+                    }
                 }
             }
             Ok(())
@@ -283,7 +322,8 @@ impl Stream {
             .into_iter()
             .map(|sub| format!("liquidation.{}", sub.to_uppercase()))
             .collect();
-        let request = Subscription::new("subscribe", arr.iter().map(String::as_str).collect());
+        let request =
+            Subscription::new("subscribe", arr.iter().map(String::as_str).collect());
 
         let handler = move |event| {
             if let WebsocketEvents::LiquidationEvent(liquidation) = event {
@@ -304,7 +344,8 @@ impl Stream {
             .into_iter()
             .map(|(interval, sym)| format!("kline.{}.{}", interval, sym.to_uppercase()))
             .collect();
-        let request = Subscription::new("subscribe", arr.iter().map(AsRef::as_ref).collect());
+        let request =
+            Subscription::new("subscribe", arr.iter().map(AsRef::as_ref).collect());
         self.ws_subscribe(request, category, move |event| {
             if let WebsocketEvents::KlineEvent(kline) = event {
                 sender.send(kline).unwrap();

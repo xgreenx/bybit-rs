@@ -1,12 +1,14 @@
-use crate::account::AccountManager;
-use crate::asset::AssetManager;
-use crate::client::Client;
-use crate::config::Config;
-use crate::general::General;
-use crate::market::MarketData;
-use crate::position::PositionManager;
-use crate::trade::Trader;
-use crate::ws::Stream;
+use crate::{
+    account::AccountManager,
+    asset::AssetManager,
+    client::Client,
+    config::Config,
+    general::General,
+    market::MarketData,
+    position::PositionManager,
+    trade::Trader,
+    ws::Stream,
+};
 
 pub enum API {
     Market(Market),
@@ -121,6 +123,9 @@ pub enum Asset {
     Deposit,
     QuerySubmemberAddress,
     OrderRecord,
+    RequestQuote,
+    ConfirmQuote,
+    QueryCoinsList,
 }
 
 pub enum SpotLeverage {
@@ -215,11 +220,19 @@ impl AsRef<str> for API {
                 Asset::DeliveryRecord => "/v5/asset/delivery-record",
                 Asset::SettlementRecord => "/v5/asset/settlement-record",
                 Asset::QueryAssetInfo => "/v5/asset/transfer/query-asset-info",
-                Asset::QueryAccountCoinBalance => "/v5/asset/transfer/query-account-coins-balance",
-                Asset::QueryTransferCoinList => "/v5/asset/transfer/query-transfer-coin-list",
+                Asset::QueryAccountCoinBalance => {
+                    "/v5/asset/transfer/query-account-coins-balance"
+                }
+                Asset::QueryTransferCoinList => {
+                    "/v5/asset/transfer/query-transfer-coin-list"
+                }
                 Asset::Intertransfer => "/v5/asset/transfer/inter-transfer",
-                Asset::QueryTransferList => "/v5/asset/transfer/query-inter-transfer-list",
-                Asset::QueryTransferSubmemberList => "/v5/asset/transfer/query-sub-member-list",
+                Asset::QueryTransferList => {
+                    "/v5/asset/transfer/query-inter-transfer-list"
+                }
+                Asset::QueryTransferSubmemberList => {
+                    "/v5/asset/transfer/query-sub-member-list"
+                }
                 Asset::UniversalTransfer => "/v5/asset/transfer/universal-transfer",
                 Asset::QueryUniversalTransferList => {
                     "/v5/asset/transfer/query-universal-transfer-list"
@@ -229,7 +242,12 @@ impl AsRef<str> for API {
                 Asset::CancelWithdraw => "/v5/asset/withdraw/cancel",
                 Asset::QueryInfo => "/v5/asset/coin/query-info",
                 Asset::QueryRecord => "/v5/asset/deposit/query-record",
-                Asset::QuerySubmemberAddress => "/v5/asset/deposit/query-sub-member-address",
+                Asset::QuerySubmemberAddress => {
+                    "/v5/asset/deposit/query-sub-member-address"
+                }
+                Asset::RequestQuote => "/v5/asset/exchange/quote-apply",
+                Asset::ConfirmQuote => "/v5/asset/exchange/convert-execute",
+                Asset::QueryCoinsList => "/v5/asset/exchange/query-coin-list",
                 _ => {
                     todo!("Asset route not implemented");
                 }
@@ -252,7 +270,9 @@ impl AsRef<str> for API {
                 SpotMargin::Borrow => "/v5/spot-cross-margin-trade/loan",
                 SpotMargin::Repay => "/v5/spot-cross-margin-trade/repay",
                 SpotMargin::BorrowOrderDetail => "/v5/spot-cross-margin-trade/orders",
-                SpotMargin::RepayOrderDetail => "/v5/spot-cross-margin-trade/repay-history",
+                SpotMargin::RepayOrderDetail => {
+                    "/v5/spot-cross-margin-trade/repay-history"
+                }
                 SpotMargin::ClassicMarginTogggle => "/v5/spot-cross-margin-trade/switch",
             },
         }
@@ -317,7 +337,11 @@ impl Bybit for General {
         secret_key: Option<String>,
     ) -> General {
         General {
-            client: Client::new(api_key, secret_key, config.rest_api_endpoint.to_string()),
+            client: Client::new(
+                api_key,
+                secret_key,
+                config.rest_api_endpoint.to_string(),
+            ),
         }
     }
 }
@@ -332,7 +356,11 @@ impl Bybit for MarketData {
         secret_key: Option<String>,
     ) -> MarketData {
         MarketData {
-            client: Client::new(api_key, secret_key, config.rest_api_endpoint.to_string()),
+            client: Client::new(
+                api_key,
+                secret_key,
+                config.rest_api_endpoint.to_string(),
+            ),
             recv_window: config.recv_window,
         }
     }
@@ -348,7 +376,11 @@ impl Bybit for Trader {
         secret_key: Option<String>,
     ) -> Trader {
         Trader {
-            client: Client::new(api_key, secret_key, config.rest_api_endpoint.to_string()),
+            client: Client::new(
+                api_key,
+                secret_key,
+                config.rest_api_endpoint.to_string(),
+            ),
             recv_window: config.recv_window,
         }
     }
@@ -363,7 +395,11 @@ impl Bybit for PositionManager {
         secret_key: Option<String>,
     ) -> PositionManager {
         PositionManager {
-            client: Client::new(api_key, secret_key, config.rest_api_endpoint.to_string()),
+            client: Client::new(
+                api_key,
+                secret_key,
+                config.rest_api_endpoint.to_string(),
+            ),
             recv_window: config.recv_window,
         }
     }
@@ -379,7 +415,11 @@ impl Bybit for AccountManager {
         secret_key: Option<String>,
     ) -> AccountManager {
         AccountManager {
-            client: Client::new(api_key, secret_key, config.rest_api_endpoint.to_string()),
+            client: Client::new(
+                api_key,
+                secret_key,
+                config.rest_api_endpoint.to_string(),
+            ),
             recv_window: config.recv_window,
         }
     }
@@ -395,7 +435,11 @@ impl Bybit for AssetManager {
         secret_key: Option<String>,
     ) -> AssetManager {
         AssetManager {
-            client: Client::new(api_key, secret_key, config.rest_api_endpoint.to_string()),
+            client: Client::new(
+                api_key,
+                secret_key,
+                config.rest_api_endpoint.to_string(),
+            ),
             recv_window: config.recv_window,
         }
     }

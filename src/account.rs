@@ -1,19 +1,82 @@
 use std::collections::BTreeMap;
 
-use crate::api::{Account, API};
-use crate::client::Client;
-use crate::errors::BybitError;
-use crate::model::{
-    AccountInfoResponse, BatchSetCollateralCoinResponse, BorrowHistoryRequest,
-    BorrowHistoryResponse, Category, CollateralInfoResponse, FeeRateResponse,
-    RepayLiabilityResponse, SetCollateralCoinResponse, SetMarginModeResponse, SmpResponse,
-    SpotHedgingResponse, TransactionLogRequest, TransactionLogResponse, UTAResponse,
-    WalletResponse,
+use crate::{
+    api::{
+        Account,
+        API,
+    },
+    client::Client,
+    errors::BybitError,
+    model::{
+        AccountInfoResponse,
+        BatchSetCollateralCoinResponse,
+        BorrowHistoryRequest,
+        BorrowHistoryResponse,
+        Category,
+        CollateralInfoResponse,
+        FeeRateResponse,
+        RepayLiabilityResponse,
+        SetCollateralCoinResponse,
+        SetMarginModeResponse,
+        SmpResponse,
+        SpotHedgingResponse,
+        TransactionLogRequest,
+        TransactionLogResponse,
+        UTAResponse,
+        WalletResponse,
+    },
 };
 
-use serde_json::{json, Value};
+use serde_json::{
+    json,
+    Value,
+};
 
-use crate::util::{build_json_request, build_request, date_to_milliseconds};
+use crate::util::{
+    build_json_request,
+    build_request,
+    date_to_milliseconds,
+};
+
+#[derive(Debug, Clone, Copy)]
+pub enum QuotaAccountType {
+    Funding,
+    UTA,
+    Spot,
+    Contract,
+    Inverse,
+}
+
+impl AsRef<str> for QuotaAccountType {
+    fn as_ref(&self) -> &str {
+        match self {
+            QuotaAccountType::Funding => "eb_convert_funding",
+            QuotaAccountType::UTA => "eb_convert_uta",
+            QuotaAccountType::Spot => "eb_convert_spot",
+            QuotaAccountType::Contract => "eb_convert_contract",
+            QuotaAccountType::Inverse => "eb_convert_inverse",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum AccountType {
+    Funding,
+    UTA,
+    Spot,
+    Contract,
+}
+
+impl AsRef<str> for AccountType {
+    fn as_ref(&self) -> &str {
+        match self {
+            AccountType::Funding => "FUND",
+            AccountType::UTA => "UNIFIED",
+            AccountType::Spot => "SPOT",
+            AccountType::Contract => "CONTRACT",
+        }
+    }
+}
 
 #[derive(Clone)]
 pub struct AccountManager {
@@ -22,7 +85,6 @@ pub struct AccountManager {
 }
 
 impl AccountManager {
-    
     /// Fetches the wallet balance for a specific account and optional coin.
     ///
     /// # Arguments
@@ -39,7 +101,7 @@ impl AccountManager {
         coin: Option<&str>,
     ) -> Result<WalletResponse, BybitError> {
         // Create a new BTreeMap to hold the request parameters.
-        let mut parameters: BTreeMap<String, Value> = BTreeMap::new();
+        let mut parameters: BTreeMap<String, String> = BTreeMap::new();
 
         // Add the account type parameter.
         parameters.insert("accountType".into(), account.into());
@@ -66,7 +128,6 @@ impl AccountManager {
         Ok(response)
     }
 
-    
     /// Upgrades the current account to UTA.
     ///
     /// This function sends a POST request to the Bybit API to upgrade the current account to UTA
@@ -94,7 +155,6 @@ impl AccountManager {
         // Return the response.
         Ok(response)
     }
-
 
     /// Retrieves the borrow history for the current account.
     ///
@@ -202,7 +262,10 @@ impl AccountManager {
         // Insert the coin parameter.
         parameters.insert("coin".into(), coin.into());
         // Insert the collateral switch parameter based on the switch value.
-        parameters.insert("collateralSwitch".into(), if switch { "ON".into() } else { "OFF".into() });
+        parameters.insert(
+            "collateralSwitch".into(),
+            if switch { "ON".into() } else { "OFF".into() },
+        );
         // Build the request using the parameters.
         let request = build_json_request(&parameters);
         // Send the signed request to the Bybit API and await the response.
@@ -297,7 +360,6 @@ impl AccountManager {
         Ok(response)
     }
 
-
     /// Retrieves the fee rate for a given market category and symbol.
     ///
     /// # Arguments
@@ -313,7 +375,7 @@ impl AccountManager {
         category: Category,
         symbol: Option<String>,
     ) -> Result<FeeRateResponse, BybitError> {
-        let mut parameters: BTreeMap<String, Value> = BTreeMap::new();
+        let mut parameters: BTreeMap<String, String> = BTreeMap::new();
 
         // Insert the category parameter.
         parameters.insert("category".into(), category.as_str().into());
@@ -329,7 +391,7 @@ impl AccountManager {
         // Send the signed request to the Bybit API and await the response.
         let response: FeeRateResponse = self
             .client
-            .post_signed(
+            .get_signed(
                 API::Account(Account::FeeRate),
                 self.recv_window.into(),
                 Some(req),
@@ -392,7 +454,7 @@ impl AccountManager {
 
         // Add the account type to the request parameters if it is specified.
         if let Some(v) = req.account_type {
-            parameters.insert("accountType".into(), v.into());
+            parameters.insert("accountType".into(), v.as_ref().into());
         }
 
         // Add the category to the request parameters if it is specified.
